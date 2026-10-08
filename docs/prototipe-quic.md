@@ -70,15 +70,18 @@ Lingkungan: Python 3.12.14, `aioquic` 1.3.0, hub di `127.0.0.1:4433`, dua proses
 - Paket IPv4 20 byte dari `198.18.0.1` ke `198.18.0.2` lolos pemeriksaan alamat di hub dan diterima node B.
 - Paket dengan checksum header IPv4 salah ditolak oleh encoder node sebelum dikirim.
 - Node B hanya mencetak metadata paket. Paket uji memakai protocol number 253; tidak ada ping, socket IP, atau routing OS yang diuji.
-- Uji ini tidak mencakup penolakan ACL, paket rusak, IPv6, NAT, jaringan lintas-host, throughput, atau TUN/NetworkExtension.
+- Uji awal ini tidak mencakup penolakan ACL, paket rusak, IPv6, NAT, jaringan lintas-host, throughput, atau TUN/NetworkExtension. Uji IPv6 loopback manual dijalankan kemudian dan dicatat di atas.
+- Uji IPv6 manual kemudian berhasil merelay datagram 40 byte dari `fd12:3456:789a::1` (node A) ke `fd12:3456:789a::2` (node B). Node B menampilkan `IP fd12:3456:789a::1 -> fd12:3456:789a::2; 40 bytes from node-a`.
+- Hub hanya bind ke `127.0.0.1`; node mencetak metadata paket yang direlay melalui QUIC userspace. Tidak ada paket yang disuntikkan ke interface OS. Hasil ini tidak membuktikan ping, routing OS, TUN/NetworkExtension, NAT traversal, atau konektivitas lintas-host.
 - Hub, klien, serta proses uji dihentikan setelah selesai. Uji berjalan hanya lewat loopback dan tidak mengubah interface atau rute.
 
-## Demo paket IPv4 manual (opsional)
+## Demo paket IP manual (opsional)
 
-Dengan konfigurasi contoh, alamat node A adalah `198.18.0.1` dan node B `198.18.0.2`. Setelah kedua node tersambung, pada prompt node A masukkan satu paket IPv4 header-only ke peer B:
+Dengan konfigurasi contoh, alamat node A adalah `198.18.0.1` dan `fd12:3456:789a::1`; node B adalah `198.18.0.2` dan `fd12:3456:789a::2`. Setelah kedua node tersambung, pada prompt node A masukkan paket header-only ini ke peer B.
 
 ```text
 ip4 node-b 450000140000000040fdedc5c6120001c6120002
+ip6 node-b 600000000000fd40fd123456789a00000000000000000001fd123456789a00000000000000000002
 ```
 
-Paket 20 byte ini hanya demonstrasi framing dan ACL vEtherTunel. Ia memakai protocol number 253 untuk eksperimen, bukan ICMP; keberhasilannya tidak berarti `ping` atau routing OS berfungsi. Node B hanya menampilkan alamat dan ukuran paket.
+Paket tersebut hanya demonstrasi framing dan ACL vEtherTunel. Keduanya memakai protocol number 253 untuk eksperimen, bukan ICMP; keberhasilannya tidak berarti `ping` atau routing OS berfungsi. Node B hanya menampilkan alamat dan ukuran paket.
