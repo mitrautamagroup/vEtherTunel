@@ -1,6 +1,6 @@
 # Prototipe QUIC userspace
 
-Prototipe ini adalah langkah implementasi pertama untuk menguji identitas node, keanggotaan vEther, ACL peer, framing vEtherTunel, dan pengiriman pesan melalui QUIC. Ini **belum** merupakan tunnel IP: belum membuat TUN/NetworkExtension, belum membawa paket IPv4/IPv6, dan tidak mengubah interface, rute, DNS, firewall, atau pengaturan boot macOS.
+Prototipe ini adalah langkah implementasi pertama untuk menguji identitas node, keanggotaan vEther, ACL peer, framing vEtherTunel, dan pengiriman data melalui QUIC. Ini **belum** merupakan tunnel IP: paket IP harus diberikan manual sebagai hex, tidak diambil dari stack OS, dan tidak diserahkan ke interface OS. Prototipe tidak mengubah interface, rute, DNS, firewall, atau pengaturan boot macOS.
 
 ## Yang tersedia
 
@@ -53,9 +53,20 @@ Saat diminta, ketik token node A pada prompt tersembunyi. Terminal 3 jalankan no
 
 ## Batas dan tindak lanjut
 
-- CLI node saat ini hanya mengirim pesan teks; belum ada adapter TUN/NetworkExtension atau cara mengambil paket dari stack OS. Jalur framing/relay IP belum dibuktikan berjalan.
+- CLI menerima pesan teks atau paket IPv4/IPv6 manual dalam bentuk hex; hub memeriksa alamat sumber/destinasi terhadap pendaftaran node dan ACL sebelum merelaynya.
+- Tidak ada adapter TUN/NetworkExtension atau cara mengambil paket dari stack OS. Peer hanya menampilkan metadata paket yang diterima; paket tidak diserahkan ke interface OS.
 - Prototipe belum membuktikan konektivitas antarjaringan, NAT traversal, ping, TCP overlay, atau interoperabilitas dengan interface vEther appliance.
 - Jangan bind hub ke alamat publik atau meneruskan port router sebagai bagian dari uji awal.
 - Token contoh harus diganti; konfigurasi hub berisi bearer token untuk lab dan wajib dijaga lokal.
 - Tahap berikutnya: uji dua proses, tambah uji protokol/ACL, konfigurasi enrollment yang lebih baik, lalu implementasikan adapter paket di lingkungan Linux lab. Integrasi macOS menunggu desain NetworkExtension, entitlement, review, dan uji VM/Mac terpisah.
 - Relay IP userspace belum diuji. Paket yang lolos validasi belum diserahkan ke interface OS.
+
+## Demo paket IPv4 manual (opsional)
+
+Dengan konfigurasi contoh, alamat node A adalah `198.18.0.1` dan node B `198.18.0.2`. Setelah kedua node tersambung, pada prompt node A masukkan satu paket IPv4 header-only ke peer B:
+
+```text
+ip4 node-b 450000140000000040fdedc5c6120001c6120002
+```
+
+Paket 20 byte ini hanya demonstrasi framing dan ACL vEtherTunel. Ia memakai protocol number 253 untuk eksperimen, bukan ICMP; keberhasilannya tidak berarti `ping` atau routing OS berfungsi. Node B hanya menampilkan alamat dan ukuran paket.

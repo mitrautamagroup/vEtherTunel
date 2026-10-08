@@ -18,7 +18,15 @@ from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.events import DatagramFrameReceived, QuicEvent, StreamDataReceived
 
 from .hub import ALPN, MAX_CONTROL_SIZE
-from .protocol import Envelope, MAX_DATAGRAM_SIZE, PAYLOAD_TEXT, ProtocolError
+from .protocol import (
+    Envelope,
+    MAX_DATAGRAM_SIZE,
+    PAYLOAD_IPV4,
+    PAYLOAD_IPV6,
+    PAYLOAD_TEXT,
+    ProtocolError,
+    validate_ip_packet,
+)
 
 LOG = logging.getLogger("vethertunel.node")
 
@@ -53,6 +61,15 @@ class NodeProtocol(QuicConnectionProtocol):
             if envelope.payload_type == PAYLOAD_TEXT:
                 message = envelope.payload.decode("utf-8", errors="replace")
                 print(f"[{envelope.source_node_id} -> {envelope.destination_node_id}] {message}", flush=True)
+            elif envelope.payload_type in (PAYLOAD_IPV4, PAYLOAD_IPV6):
+                packet_source, packet_destination = validate_ip_packet(
+                    envelope.payload, envelope.payload_type
+                )
+                print(
+                    f"IP {packet_source} -> {packet_destination}; "
+                    f"{len(envelope.payload)} bytes from {envelope.source_node_id}",
+                    flush=True,
+                )
             else:
                 print(
                     f"received payload type={envelope.payload_type} bytes={len(envelope.payload)} "
@@ -111,17 +128,32 @@ async def _interactive_loop(protocol: NodeProtocol, vether_id: str, node_id: str
         command = line.rstrip("\r\n")
         if command == "/quit":
             return
-        destination, separator, message = command.partition(" ")
-        if not separator or not destination or not message:
-            print("Format: <node-id> <message>; /quit to stop", flush=True)
-            continue
+        words = command.split(maxsplit=2)
+        payload_type = PAYLOAD_TEXT
+        if words and words[0] in ("ip4", "ip6"):
+            if len(words) != 3 or len(words[2]) > MAX_DATAGRAM_SIZE * 2:
+                print("Format: ip4|ip6 <node-id> <packet-hex>", flush=True)
+                continue
+            destination = words[1]
+            try:
+                message_bytes = bytes.fromhex(words[2])
+            except ValueError:
+                print("Not sent: packet must be hexadecimal", flush=True)
+                continue
+            payload_type = PAYLOAD_IPV4 if words[0] == "ip4" else PAYLOAD_IPV6
+        else:
+            destination, separator, message = command.partition(" ")
+            if not separator or not destination or not message:
+                print("Format: <node-id> <message>; ip4|ip6 <node-id> <packet-hex>; /quit to stop", flush=True)
+                continue
+            message_bytes = message.encode("utf-8")
         try:
             raw = Envelope(
                 vether_id=vether_id,
                 source_node_id=node_id,
                 destination_node_id=destination,
-                payload_type=PAYLOAD_TEXT,
-                payload=message.encode("utf-8"),
+                payload_type=payload_type,
+                payload=message_bytes,
             ).encode()
         except ProtocolError as exc:
             print(f"Not sent: {exc}", flush=True)
