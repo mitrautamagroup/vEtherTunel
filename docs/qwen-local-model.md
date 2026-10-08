@@ -4,6 +4,8 @@
 
 Keputusan rancangan saat ini: protokol aplikasi vEtherTunel sendiri di atas QUIC/TLS 1.3, tidak menggunakan WireGuard, dan tidak membuat algoritma kriptografi baru. Bangun ulang model lokal setelah mengubah Modelfile agar instruksi baru diterapkan.
 
+Untuk macOS, Modelfile juga menetapkan batas keselamatan: gunakan NetworkExtension, jangan mengubah KEXT/SIP/boot/system volume/startup, jangan menginstal launch daemon, jangan memakai default route/DNS pada MVP, dan jangan menjalankan perintah jaringan berprivilege dari installer atau kode startup. Uji perubahan jaringan di VM/Mac terpisah dengan jalur rollback.
+
 Ini **bukan fine-tuning** dan tidak mengubah bobot model. System prompt membantu Qwen tetap konsisten pada konteks dan instruksi proyek, tetapi jawaban tetap perlu diperiksa dan model dapat keliru.
 
 ## Membuat model

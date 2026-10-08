@@ -29,7 +29,7 @@ Catatan proses menyiapkan model Qwen lokal, menghubungkannya ke Twinny/Antigravi
 
 ## Prinsip keamanan
 
-Setiap peer harus terautentikasi dan hanya menerima rute/akses yang diizinkan. Kunci privat tidak boleh disimpan di repositori. Port forwarding atau akses jaringan tidak boleh dibuka lebih luas daripada kebutuhan. Lihat bagian keamanan di dokumen arsitektur sebelum membuat prototipe.
+Setiap peer harus terautentikasi dan hanya menerima rute/akses yang diizinkan. Kunci privat tidak boleh disimpan di repositori. Port forwarding atau akses jaringan tidak boleh dibuka lebih luas daripada kebutuhan. Di macOS, rancangan wajib memakai NetworkExtension yang dikelola sistem, tanpa kernel extension, perubahan boot/SIP, default route, atau perubahan DNS pada MVP. Tunnel mati secara default dan harus dapat dihentikan tanpa meninggalkan rute milik vEtherTunel. Lihat bagian keamanan di dokumen arsitektur sebelum membuat prototipe.
 
 ## Kontribusi
 

@@ -4,7 +4,8 @@ Roadmap ini adalah usulan bertahap untuk membawa konsep vEtherTunel ke prototipe
 
 ## 0. Sepakati kebutuhan
 
-- Tentukan perangkat dan sistem operasi yang akan menjadi node. Untuk macOS, validasi entitlement dan prototype `NEPacketTunnelProvider` sebelum menjanjikan dukungan; evaluasi provider Ethernet Layer 2 sebagai tahap terpisah.
+- Tentukan perangkat dan sistem operasi yang akan menjadi node. Untuk macOS, validasi entitlement, jalur distribusi, dan prototype `NEPacketTunnelProvider` di VM/Mac uji sebelum menjanjikan dukungan; evaluasi provider Ethernet Layer 2 sebagai tahap terpisah.
+- Tinjau batas keselamatan macOS: tanpa KEXT/SIP/boot/startup modifications, tunnel opt-in, tanpa default route/DNS pada MVP, stop/rollback terbukti.
 - Pilih skenario utama: akses antarperangkat, antar-LAN, atau keduanya.
 - Tentukan kebutuhan Layer 3 dibanding bridging Ethernet Layer 2.
 - Tetapkan threat model, siapa yang mengoperasikan hub, dan model enrollment.
@@ -16,6 +17,7 @@ Roadmap ini adalah usulan bertahap untuk membawa konsep vEtherTunel ke prototipe
 - Hubungkan interface TUN vEtherTunel ke satu interface/segmen vEther lokal dan tetapkan rute overlay sempit.
 - Verifikasi ping dan TCP, restart, serta pembersihan konfigurasi.
 - Dokumentasikan instalasi, keterbatasan, dan cara memeriksa status.
+- Pastikan uji macOS memakai overlay route yang sempit dan prosedur deactivate/rollback yang terdokumentasi.
 
 ## 2. Hub dan kontrol akses
 

@@ -10,6 +10,8 @@ Dokumen ini mencatat pekerjaan yang dilakukan pada 9 Oktober 2026 untuk menyiapk
 - Dokumen menyatakan dengan jelas bahwa repo saat ini masih berisi rancangan, belum implementasi tunnel.
 - Pada draf awal, WireGuard sempat dicatat sebagai kandidat. Keputusan terbaru pemilik proyek pada 9 Oktober 2026 menggantinya: vEtherTunel akan memiliki protokol aplikasi sendiri di atas QUIC/TLS 1.3 dan tidak menggunakan WireGuard. Keputusan ini belum diimplementasikan.
 - Untuk eksperimen di Mac, dokumentasi Apple menyediakan `NEPacketTunnelProvider` untuk interface virtual Layer 3 dan `NEEthernetTunnelProvider` untuk tunnel frame link-layer kustom. Agen perlu dibuat sebagai Network Extension dan entitlement yang sesuai harus tersedia; Mac tidak otomatis memiliki interface bernama vEtherTunel. Lihat tautan resmi di dokumen arsitektur.
+- Persyaratan keselamatan Mac ditambahkan: tidak memakai KEXT, tidak mengubah SIP/boot/system volume/startup, tidak memakai default route/DNS pada MVP, tunnel harus opt-in, dan harus ada stop/rollback. Dukungan macOS belum dipastikan sebelum entitlement/distribusi dan uji VM/Mac terpisah tersedia.
+- Ollama dapat menjalankan Qwen lokal untuk dipilih Twinny sebagai provider model. Ini bukan kanal komunikasi langsung antara Twinny/Antigravity dan chat Codex. Pada pemeriksaan terakhir, selector Twinny masih menampilkan `qwen2.5-coder:3b`, jadi model khusus harus dipilih secara eksplisit sebelum dipakai di Twinny.
 
 ### Profil Qwen untuk proyek
 

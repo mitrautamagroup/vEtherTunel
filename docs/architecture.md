@@ -90,6 +90,19 @@ Tambahkan lebih dari satu hub, pemilihan jalur, dan pemulihan ketika hub gagal. 
 - Hindari logging payload aplikasi. Log metadata secukupnya untuk pemecahan masalah dan tetapkan retensi.
 - Jangan membuka port publik atau mengaktifkan IP forwarding secara luas sebagai efek samping instalasi.
 
+## Batas keselamatan macOS
+
+Tujuan desain adalah membatasi perubahan vEtherTunel pada konfigurasi tunnel yang diminta pengguna dan dikelola NetworkExtension. Tidak ada perangkat lunak jaringan yang dapat menjamin nihil bug atau nihil gangguan konektivitas; karena itu bootability, rollback, dan isolasi konfigurasi adalah persyaratan desain serta uji penerimaan.
+
+- Jangan membuat atau memasang kernel extension (KEXT), mengubah SIP, boot arguments, volume sistem, konfigurasi startup/launch daemon, firewall sistem, atau konfigurasi jaringan host di luar API NetworkExtension.
+- Tunnel nonaktif pada instalasi awal dan hanya mulai setelah tindakan eksplisit pengguna. Jangan auto-connect saat boot/login pada MVP.
+- Gunakan rute overlay spesifik saja. Jangan mengiklankan `0.0.0.0/0` atau `::/0`, mengaktifkan full tunnel, atau mengubah DNS pada MVP. Apple mendokumentasikan bahwa memasukkan default route akan mengarahkan trafik yang tidak cocok dengan rute lebih spesifik ke tunnel ([Routing your VPN network traffic](https://developer.apple.com/documentation/networkextension/routing-your-vpn-network-traffic)).
+- Jangan menjalankan `sudo`, `route`, `ifconfig`, atau perintah shell berprivilege untuk mengubah interface/rute dari installer, app, atau skrip startup. Perubahan tunnel dilakukan melalui API NetworkExtension dan dibatasi ke konfigurasi milik vEtherTunel.
+- Saat stop, disconnect, crash recovery, atau uninstall, provider harus menutup sesi dan meminta sistem menghapus konfigurasi interface/rute yang dibuatnya. Jangan menghapus atau menimpa konfigurasi jaringan yang tidak dimiliki aplikasi.
+- Sediakan tombol stop/deactivate yang jelas dan prosedur pemulihan manual jika konfigurasi provider bermasalah. Jangan meminta pengguna mematikan SIP atau proteksi sistem untuk memasang produk.
+- Uji perubahan jaringan terlebih dahulu pada macOS VM sekali pakai atau Mac uji terpisah, dengan snapshot/backup dan akses pemulihan lokal. Jangan jadikan komputer kerja utama satu-satunya target uji.
+- Tinjau entitlement, signing, model app extension/system extension, dan proses persetujuan sebelum deployment berdasarkan [Apple TN3134](https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment).
+
 ## Kegagalan dan observabilitas
 
 Status per peer sebaiknya menampilkan identitas singkat, alamat overlay, endpoint aktif, waktu handshake terakhir, byte masuk/keluar, jalur (langsung/hub/relay), dan alasan kegagalan yang aman untuk ditampilkan. Reconnect harus memakai backoff agar outage tidak menghasilkan loop koneksi agresif. Perubahan rute harus dapat dipulihkan ketika agen dihentikan.
@@ -99,6 +112,7 @@ Status per peer sebaiknya menampilkan identitas singkat, alamat overlay, endpoin
 - Platform awal: Linux saja atau Linux/macOS/Windows.
 - Untuk macOS, jalur MVP yang tersedia pada dokumentasi Apple adalah app extension NetworkExtension berbasis `NEPacketTunnelProvider`, yang menyediakan virtual interface Layer 3 dan alur paket IP untuk protokol tunnel kustom. Penggunaan provider ini memerlukan entitlement NetworkExtension. Jika kebutuhan kemudian benar-benar mengharuskan frame Ethernet Layer 2, Apple juga mendokumentasikan `NEEthernetTunnelProvider` dan `NEEthernetTunnelNetworkSettings`; kelayakan entitlement, provisioning, dan distribusi harus diuji sebelum menjadikannya target MVP. Referensi: [NEPacketTunnelProvider](https://developer.apple.com/documentation/networkextension/nepackettunnelprovider), [NEEthernetTunnelProvider](https://developer.apple.com/documentation/networkextension/neethernettunnelprovider).
 - Mac tidak langsung menyediakan interface produk bernama vEtherTunel; agen vEtherTunel perlu membuat dan mengelola virtual interface melalui NetworkExtension. Untuk uji awal, gunakan mode IP Layer 3.
+- Jalur pengemasan NetworkExtension di macOS berbeda menurut provider dan distribusi: packet tunnel app extension dibatasi distribusi App Store menurut panduan Apple, sementara system extension memiliki model persetujuan dan operasi yang lebih luas. Pilih model hanya setelah entitlement dan cara distribusi diverifikasi; jangan memasang system extension diam-diam.
 - Apakah hub merutekan sesi QUIC per node atau control plane hanya membantu pembentukan sesi langsung.
 - Format dan transport API control plane.
 - Distribusi kunci: provisioning manual untuk prototipe atau layanan enrollment.

@@ -11,6 +11,9 @@ Project facts:
 - The proposed MVP uses a vEtherTunel-owned control/data protocol for node enrollment, vEther membership, policy, and packet encapsulation. It connects local vEther interfaces to a Layer 3 overlay and routes only authorized traffic; do not forward Ethernet broadcasts in the MVP.
 - Use QUIC with TLS 1.3 as the secure transport layer. Do not use WireGuard. Do not invent cryptographic algorithms; use the established transport security and vetted libraries.
 - The initial topology is hub-and-spoke. Direct peer-to-peer sessions and relay fallback are later options. Layer 2 Ethernet bridging is a later evaluation, not an MVP promise.
+- macOS safety is a hard requirement: use Apple-managed NetworkExtension APIs; never add kernel extensions, modify SIP/security settings, write to the system volume, change boot configuration, install launch daemons, or invoke privileged route/interface commands from install/startup code.
+- Keep tunnels off until the user explicitly starts them. Route only the configured lab overlay; never install a default route or change DNS in the MVP. Ensure stop/disconnect removes only vEtherTunel-owned settings and provide a visible recovery/off switch.
+- Do not claim zero risk. Validate in a disposable macOS VM or separate test Mac, document recovery steps, and require explicit review before any code that can alter host networking or needs elevated privileges.
 - Peer identity and authorization must be explicit. Prefer default-deny ACLs, least-privilege routes, private-key protection, revocation, and safe cleanup of interfaces/routes.
 - Do not invent address ranges, API behavior, platform support, or security guarantees. Mark proposals and assumptions clearly.
 
