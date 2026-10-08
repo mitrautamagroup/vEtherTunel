@@ -17,6 +17,8 @@ MVP memakai **overlay Layer 3**: setiap node memperoleh alamat IP pada subnet vi
 
 Topologi awal menggunakan hub-and-spoke melalui satu gateway/tunnel hub. Setelah protokol kontrol dan autentikasi stabil, koneksi peer-to-peer langsung dapat ditambahkan dengan relay sebagai fallback. Rincian alur paket, identitas node, kontrol akses, dan batas MVP ada di [`docs/architecture.md`](docs/architecture.md). Tahapan kerja ada di [`docs/roadmap.md`](docs/roadmap.md).
 
+Catatan proses menyiapkan model Qwen lokal, menghubungkannya ke Twinny/Antigravity, dan status publikasi GitHub ada di [`docs/catatan-proses-antigravity.md`](docs/catatan-proses-antigravity.md).
+
 ## Status
 
 - [x] Konsep dan batas rancangan awal didokumentasikan.
