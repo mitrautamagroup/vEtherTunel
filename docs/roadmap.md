@@ -5,7 +5,7 @@ Roadmap ini adalah usulan bertahap untuk membawa konsep vEtherTunel ke prototipe
 ## Status implementasi saat ini
 
 - Prototipe Python userspace tersedia untuk QUIC/TLS 1.3 hub localhost, enrollment node, ACL peer, envelope v1, pesan teks, dan kirim paket IPv4/IPv6 manual melalui relay tervalidasi.
-- Belum ada adapter TUN/NetworkExtension, routing OS, uji otomatis, atau uji lintas-host. Ikuti `docs/prototipe-quic.md`.
+- Demo manual loopback untuk teks dan satu paket IPv4 header-only berhasil. Belum ada adapter TUN/NetworkExtension, routing OS, uji otomatis, IPv6, atau uji lintas-host. Ikuti `docs/prototipe-quic.md`.
 - Antigravity mendapat panduan proyek di `AGENTS.md`; minta partner meninjau atau melanjutkan satu milestone kecil setiap sesi, lalu laporkan file, bukti, dan keterbatasan.
 
 ## 0. Sepakati kebutuhan
