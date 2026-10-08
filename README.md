@@ -25,7 +25,9 @@ Catatan proses menyiapkan model Qwen lokal, menghubungkannya ke Twinny/Antigravi
 
 - [x] Konsep, batas rancangan, dan instruksi engineering untuk Antigravity didokumentasikan.
 - [x] Prototipe awal QUIC localhost: enrollment, envelope v1, ACL peer, pesan teks dan paket IP manual melalui DATAGRAM.
-- [x] Validasi header/alamat IPv4 dan IPv6 pada hub (jalur ini belum diuji dan belum terhubung ke TUN).
+- [x] Relay manual pesan teks dan datagram IPv4/IPv6 tervalidasi pada loopback; paket hanya ditampilkan sebagai metadata dan tidak diserahkan ke stack IP OS.
+- [x] Bind hub ke IP privat RFC1918/ULA secara opt-in (`--allow-private-network`); default tetap loopback dan alamat wildcard/publik ditolak. Panduan antar-komputer ada di [`docs/prototipe-quic.md`](docs/prototipe-quic.md).
+- [ ] Verifikasi komunikasi node software lintas-komputer melalui LAN privat.
 - [ ] Prototipe tunnel dua node.
 - [ ] Adapter paket IP/TUN di Linux lab.
 - [ ] NetworkExtension macOS setelah entitlement dan jalur distribusi diverifikasi.

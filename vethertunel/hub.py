@@ -32,6 +32,33 @@ from .protocol import (
 ALPN = "vethertunel/1"
 MAX_CONTROL_SIZE = 4096
 LOG = logging.getLogger("vethertunel.hub")
+_PRIVATE_BIND_NETWORKS = (
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("fc00::/7"),
+)
+
+
+def validate_bind_host(host: str, allow_private_network: bool) -> None:
+    """Keep the hub on loopback unless a private LAN bind is explicitly enabled."""
+    if host.lower() == "localhost":
+        return
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError as exc:
+        raise ValueError("bind host must be localhost or a literal private IP address") from exc
+    if address.is_unspecified or address.is_multicast:
+        raise ValueError("wildcard and multicast bind addresses are not allowed")
+    if address.is_loopback:
+        return
+    if not allow_private_network:
+        raise ValueError("non-loopback bind requires --allow-private-network")
+    if not any(
+        address.version == network.version and address in network
+        for network in _PRIVATE_BIND_NETWORKS
+    ):
+        raise ValueError("bind address must be RFC1918 IPv4 or IPv6 ULA")
 
 
 class HubRegistry:
@@ -201,6 +228,7 @@ def load_node_config(path: Path) -> dict[tuple[str, str], dict[str, Any]]:
 
 
 async def run_hub(args: argparse.Namespace) -> None:
+    validate_bind_host(args.host, getattr(args, "allow_private_network", False))
     registry = HubRegistry(load_node_config(args.config))
     configuration = QuicConfiguration(
         alpn_protocols=[ALPN],
@@ -227,11 +255,18 @@ def main() -> None:
     parser.add_argument("--private-key", type=Path, required=True, help="TLS private key PEM")
     parser.add_argument("--host", default="127.0.0.1", help="listen address (default: loopback only)")
     parser.add_argument("--port", type=int, default=4433)
+    parser.add_argument(
+        "--allow-private-network",
+        action="store_true",
+        help="allow binding to an RFC1918 IPv4 or IPv6 ULA address (never a wildcard/public address)",
+    )
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
     try:
         asyncio.run(run_hub(args))
+    except ValueError as exc:
+        parser.error(str(exc))
     except KeyboardInterrupt:
         pass
 

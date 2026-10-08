@@ -12,6 +12,7 @@ Prototipe ini adalah langkah implementasi pertama untuk menguji identitas node, 
 - Framing IPv4/IPv6 dengan pemeriksaan versi dan panjang; checksum header IPv4 serta kecocokan alamat sumber/destinasi terhadap node terdaftar juga diverifikasi. Hub dapat merelay envelope IP valid yang dikirim oleh pemanggil protokol.
 - Validasi sertifikat TLS pada node; sertifikat CA harus diberikan secara eksplisit.
 - Batas datagram prototipe 1100 byte.
+- Hub tetap bind ke loopback secara default. Bind ke alamat IPv4 RFC1918 atau IPv6 ULA hanya tersedia dengan flag `--allow-private-network`; alamat wildcard dan publik ditolak.
 
 ## Persiapan lokal
 
@@ -58,8 +59,39 @@ Saat diminta, ketik token node A pada prompt tersembunyi. Terminal 3 jalankan no
 - Prototipe belum membuktikan konektivitas antarjaringan, NAT traversal, ping, TCP overlay, atau interoperabilitas dengan interface vEther appliance.
 - Jangan bind hub ke alamat publik atau meneruskan port router sebagai bagian dari uji awal.
 - Token contoh harus diganti; konfigurasi hub berisi bearer token untuk lab dan wajib dijaga lokal.
-- Tahap berikutnya: uji dua proses, tambah uji protokol/ACL, konfigurasi enrollment yang lebih baik, lalu implementasikan adapter paket di lingkungan Linux lab. Integrasi macOS menunggu desain NetworkExtension, entitlement, review, dan uji VM/Mac terpisah.
+- Tahap berikutnya: verifikasi koneksi antar-komputer melalui LAN privat, lalu tambah verifikasi protokol/ACL dan perbaiki konfigurasi enrollment. Adapter paket OS tetap menunggu implementasi Linux lab; integrasi macOS menunggu desain NetworkExtension, entitlement, review, dan uji VM/Mac terpisah.
 - Demo loopback teks dan satu paket IPv4 header-only sudah berhasil pada 9 Oktober 2026. Ini hanya menguji relay envelope aplikasi; paket tidak diserahkan ke interface OS.
+
+## Demonstrasi antar-node di LAN privat (opt-in)
+
+Mode ini memungkinkan node software pada komputer berbeda bertukar pesan teks dan envelope IP manual melalui hub QUIC. Ini tetap relay userspace; tidak membuat interface, mengubah rute, atau memasukkan paket ke stack IP OS. **Mode lintas-komputer belum diuji.** Gunakan hanya LAN lab tepercaya dengan alamat RFC1918 IPv4 atau ULA IPv6. Jangan gunakan alamat publik, wildcard bind, port-forward router, atau ubah firewall secara luas.
+
+1. Pada komputer hub, buat sertifikat lab dengan SAN berisi alamat privat hub yang benar-benar digunakan. Contoh berikut memakai placeholder `192.168.1.10`; ganti dengan IP privat hub Anda:
+
+   ```sh
+   openssl req -x509 -newkey rsa:3072 -nodes \
+     -keyout certs/hub.key -out certs/hub.crt -days 30 \
+     -subj "/CN=192.168.1.10" \
+     -addext "subjectAltName=IP:192.168.1.10"
+   ```
+
+2. Jalankan hub dengan bind privat opt-in. Perintah ini hanya membuka socket QUIC pada satu IP privat; tidak mengubah firewall atau router:
+
+   ```sh
+   .venv/bin/vethertunel-hub \
+     --config hub.json --certificate certs/hub.crt --private-key certs/hub.key \
+     --host 192.168.1.10 --allow-private-network
+   ```
+
+3. Salin hanya sertifikat publik `hub.crt` ke komputer node melalui jalur administrasi tepercaya; jangan salin `hub.key` atau `hub.json` (registry tersebut berisi token semua node). Masukkan token node pada prompt tersembunyi. Di tiap node, gunakan alamat dan SAN hub yang sama:
+
+   ```sh
+   .venv/bin/vethertunel-node \
+     --host 192.168.1.10 --server-name 192.168.1.10 --ca-cert certs/hub.crt \
+     --vether-id lab --node-id node-a
+   ```
+
+   Gunakan `node-b` serta token node B pada komputer kedua. Jika firewall host memblokir koneksi, batasi izin UDP/4433 ke komputer node lab yang dipercaya; jangan meneruskan port dari internet. Setelah kedua node tersambung, gunakan `<node-id> <pesan>` untuk memeriksa relay teks. Perintah `ip4`/`ip6` tetap hanya mengirim paket contoh manual.
 
 ## Hasil uji manual loopback
 
