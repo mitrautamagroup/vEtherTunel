@@ -8,6 +8,8 @@ Untuk macOS, Modelfile juga menetapkan batas keselamatan: integrasi interface di
 
 Instruksi coding partner Antigravity berada di `AGENTS.md`, yang ditemukan sebagai aturan workspace oleh Antigravity. Baca file itu bersama `docs/architecture.md` dan `docs/prototipe-quic.md` sebelum melanjutkan implementasi.
 
+Prompt sesi yang lebih terarah untuk Antigravity + Qwen ada di [`prompt-antigravity-qwen.md`](prompt-antigravity-qwen.md). Prompt itu menyuruh model memeriksa diff lokal dahulu, mengerjakan satu milestone, dan melaporkan bukti serta batas yang belum diverifikasi.
+
 Ini **bukan fine-tuning** dan tidak mengubah bobot model. System prompt membantu Qwen tetap konsisten pada konteks dan instruksi proyek, tetapi jawaban tetap perlu diperiksa dan model dapat keliru.
 
 ## Membuat model

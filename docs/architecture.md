@@ -4,9 +4,9 @@ Dokumen ini merekam rancangan vEther: beberapa jaringan/perangkat virtual saling
 
 ## Status prototipe
 
-Repo memiliki prototipe Python userspace QUIC di `vethertunel/` untuk enrollment node, envelope v1, ACL peer, dan pertukaran teks antar node melalui hub yang default-bind ke localhost. QUIC memakai TLS 1.3 dan verifikasi sertifikat CA pada client.
+Repo memiliki prototipe Python userspace QUIC di `vethertunel/` untuk enrollment node, envelope v1, ACL peer, dan pertukaran teks antar node melalui hub yang default-bind ke localhost. Framing juga mendukung validasi paket IPv4/IPv6 dan relay berbasis alamat node bila dipanggil oleh adapter; CLI belum menghasilkan atau mengonsumsi paket tersebut. QUIC memakai TLS 1.3 dan verifikasi sertifikat CA pada client.
 
-Prototipe belum mengangkut paket IP, belum menghubungkan TUN atau NetworkExtension, belum memasang rute, belum diuji lintas host, dan bukan produk tunnel. Jenis payload IPv4/IPv6 hanya terdaftar di framing dan ditolak oleh hub. Panduan menjalankan demo lokal ada di `docs/prototipe-quic.md`.
+Prototipe belum menghubungkan TUN atau NetworkExtension, belum memasang rute, belum diuji lintas host, dan bukan produk tunnel. Jalur IP userspace belum diuji. Panduan menjalankan demo lokal ada di `docs/prototipe-quic.md`.
 
 ## Istilah
 

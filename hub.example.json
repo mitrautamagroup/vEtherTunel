@@ -4,12 +4,14 @@
       "vEther_id": "lab",
       "node_id": "node-a",
       "token": "replace-with-a-random-secret-at-least-16-chars",
+      "overlay_addresses": ["198.18.0.1"],
       "allowed_peers": ["node-b"]
     },
     {
       "vEther_id": "lab",
       "node_id": "node-b",
       "token": "replace-with-another-random-secret-at-least-16",
+      "overlay_addresses": ["198.18.0.2"],
       "allowed_peers": ["node-a"]
     }
   ]

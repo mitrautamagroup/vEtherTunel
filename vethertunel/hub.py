@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import hmac
+import ipaddress
 import json
 import logging
 from pathlib import Path
@@ -19,7 +20,14 @@ from aioquic.quic.events import (
     StreamDataReceived,
 )
 
-from .protocol import Envelope, MAX_DATAGRAM_SIZE, PAYLOAD_TEXT, ProtocolError
+from .protocol import (
+    Envelope,
+    MAX_DATAGRAM_SIZE,
+    PAYLOAD_IPV4,
+    PAYLOAD_IPV6,
+    ProtocolError,
+    validate_ip_packet,
+)
 
 ALPN = "vethertunel/1"
 MAX_CONTROL_SIZE = 4096
@@ -89,9 +97,6 @@ class HubProtocol(QuicConnectionProtocol):
         except ProtocolError as exc:
             LOG.warning("dropped malformed datagram: %s", exc)
             return
-        if envelope.payload_type != PAYLOAD_TEXT:
-            LOG.warning("dropped non-text payload; IP forwarding is not implemented")
-            return
         vether_id, authenticated_source = self.node_key
         if envelope.vether_id != vether_id or envelope.source_node_id != authenticated_source:
             LOG.warning("dropped datagram with mismatched source identity")
@@ -101,6 +106,23 @@ class HubProtocol(QuicConnectionProtocol):
             LOG.warning("dropped datagram denied by peer policy")
             return
         destination_key = (vether_id, envelope.destination_node_id)
+        destination_config = self.registry.node_config.get(destination_key)
+        if destination_config is None:
+            return
+        if envelope.payload_type in (PAYLOAD_IPV4, PAYLOAD_IPV6):
+            try:
+                packet_source, packet_destination = validate_ip_packet(
+                    envelope.payload, envelope.payload_type
+                )
+            except ProtocolError as exc:
+                LOG.warning("dropped invalid IP packet: %s", exc)
+                return
+            if packet_source not in source_config["overlay_addresses"]:
+                LOG.warning("dropped IP packet with unassigned source address")
+                return
+            if packet_destination not in destination_config["overlay_addresses"]:
+                LOG.warning("dropped IP packet addressed to a different peer")
+                return
         destination = self.registry.connections.get(destination_key)
         if destination is None:
             return
@@ -138,14 +160,43 @@ def load_node_config(path: Path) -> dict[tuple[str, str], dict[str, Any]]:
         node_id = _identifier(node.get("node_id"))
         token = node.get("token")
         peers = node.get("allowed_peers", [])
+        addresses = node.get("overlay_addresses", [])
         if not isinstance(token, str) or len(token) < 16:
             raise ValueError(f"token for {node_id} must contain at least 16 characters")
         if not isinstance(peers, list) or any(not isinstance(peer, str) for peer in peers):
             raise ValueError(f"allowed_peers for {node_id} must be a string array")
+        if not isinstance(addresses, list) or not addresses:
+            raise ValueError(f"overlay_addresses for {node_id} must be a non-empty string array")
+        try:
+            overlay_addresses = {ipaddress.ip_address(address) for address in addresses}
+        except ValueError as exc:
+            raise ValueError(f"invalid overlay address for {node_id}") from exc
+        if len(overlay_addresses) != len(addresses):
+            raise ValueError(f"duplicate overlay address for {node_id}")
         key = (vether_id, node_id)
         if key in result:
             raise ValueError(f"duplicate node registration: {node_id}")
-        result[key] = {"token": token, "allowed_peers": set(peers)}
+        result[key] = {
+            "token": token,
+            "allowed_peers": set(peers),
+            "overlay_addresses": overlay_addresses,
+        }
+    for (vether_id, node_id), entry in result.items():
+        unknown_peers = entry["allowed_peers"] - {
+            peer_id for peer_vether, peer_id in result if peer_vether == vether_id
+        }
+        if unknown_peers:
+            raise ValueError(
+                f"unknown peer(s) in vEther {vether_id} for {node_id}: "
+                f"{', '.join(sorted(unknown_peers))}"
+            )
+    addresses_by_vether: dict[str, set[ipaddress.IPv4Address | ipaddress.IPv6Address]] = {}
+    for (vether_id, node_id), entry in result.items():
+        seen = addresses_by_vether.setdefault(vether_id, set())
+        overlap = seen & entry["overlay_addresses"]
+        if overlap:
+            raise ValueError(f"duplicate overlay address in vEther {vether_id}: {min(overlap)}")
+        seen.update(entry["overlay_addresses"])
     return result
 
 

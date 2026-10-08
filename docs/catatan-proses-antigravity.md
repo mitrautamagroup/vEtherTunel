@@ -7,8 +7,8 @@ Dokumen ini mencatat pekerjaan yang dilakukan pada 9 Oktober 2026 untuk menyiapk
 ### Rancangan vEtherTunel
 
 - Repo dilengkapi konsep awal overlay jaringan Layer 3, arsitektur, prinsip keamanan, dan roadmap prototipe.
-- Repo memuat prototipe awal QUIC localhost untuk enrollment node dan pesan teks antar peer. Ini belum implementasi tunnel IP.
-- Pada draf awal, WireGuard sempat dicatat sebagai kandidat. Keputusan pemilik proyek pada 9 Oktober 2026 menetapkan protokol aplikasi vEtherTunel di atas QUIC/TLS 1.3 tanpa WireGuard. Prototipe awal kini menerapkan enrollment/control stream, envelope v1, ACL peer, dan pesan teks DATAGRAM di localhost.
+- Repo memuat prototipe QUIC localhost untuk enrollment, ACL, pesan teks, serta framing/relay IP userspace dengan validasi alamat. Ini belum implementasi tunnel IP karena tidak ada adapter TUN/NetworkExtension atau routing OS.
+- Pada draf awal, WireGuard sempat dicatat sebagai kandidat. Keputusan pemilik proyek pada 9 Oktober 2026 menetapkan protokol aplikasi vEtherTunel di atas QUIC/TLS 1.3 tanpa WireGuard. Prototipe menerapkan enrollment/control stream, envelope v1, ACL peer, pesan teks DATAGRAM, dan validasi/relay IP userspace di localhost.
 - Untuk eksperimen di Mac, dokumentasi Apple menyediakan `NEPacketTunnelProvider` untuk interface virtual Layer 3 dan `NEEthernetTunnelProvider` untuk tunnel frame link-layer kustom. Agen perlu dibuat sebagai Network Extension dan entitlement yang sesuai harus tersedia; Mac tidak otomatis memiliki interface bernama vEtherTunel. Lihat tautan resmi di dokumen arsitektur.
 - Persyaratan keselamatan Mac ditambahkan: tidak memakai KEXT, tidak mengubah SIP/boot/system volume/startup, tidak memakai default route/DNS pada MVP, tunnel harus opt-in, dan harus ada stop/rollback. Dukungan macOS belum dipastikan sebelum entitlement/distribusi dan uji VM/Mac terpisah tersedia.
 - Ditambahkan `AGENTS.md` di root repo sebagai panduan workspace Antigravity: peran partner implementasi, batas macOS, arsitektur tanpa WireGuard, kebijakan bukti/verifikasi, dan aturan menjaga rahasia. Aturan workspace Antigravity mengenali `AGENTS.md` dan `GEMINI.md`.

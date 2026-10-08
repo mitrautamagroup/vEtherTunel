@@ -9,6 +9,7 @@ Prototipe ini adalah langkah implementasi pertama untuk menguji identitas node, 
 - vEther ID dan identitas source/destination pada envelope berversi.
 - ACL peer default-deny yang dibaca dari konfigurasi hub.
 - Pesan teks antar node melalui QUIC DATAGRAM.
+- Framing IPv4/IPv6 dengan pemeriksaan panjang header, versi, dan kecocokan alamat sumber/destinasi terhadap node yang terdaftar. Hub dapat merelay envelope IP valid yang dikirim oleh pemanggil protokol.
 - Validasi sertifikat TLS pada node; sertifikat CA harus diberikan secara eksplisit.
 - Batas datagram prototipe 1100 byte.
 
@@ -52,8 +53,9 @@ Saat diminta, ketik token node A pada prompt tersembunyi. Terminal 3 jalankan no
 
 ## Batas dan tindak lanjut
 
-- Uji ini hanya memverifikasi pesan teks aplikasi di localhost. Ia belum membuktikan konektivitas antarjaringan, NAT traversal, ping, TCP overlay, atau interoperabilitas dengan interface vEther appliance.
+- CLI node saat ini hanya mengirim pesan teks; belum ada adapter TUN/NetworkExtension atau cara mengambil paket dari stack OS. Jalur framing/relay IP belum dibuktikan berjalan.
+- Prototipe belum membuktikan konektivitas antarjaringan, NAT traversal, ping, TCP overlay, atau interoperabilitas dengan interface vEther appliance.
 - Jangan bind hub ke alamat publik atau meneruskan port router sebagai bagian dari uji awal.
 - Token contoh harus diganti; konfigurasi hub berisi bearer token untuk lab dan wajib dijaga lokal.
 - Tahap berikutnya: uji dua proses, tambah uji protokol/ACL, konfigurasi enrollment yang lebih baik, lalu implementasikan adapter paket di lingkungan Linux lab. Integrasi macOS menunggu desain NetworkExtension, entitlement, review, dan uji VM/Mac terpisah.
-- Payload type IP pada envelope dicadangkan untuk tahap mendatang; hub saat ini menolak payload non-teks.
+- Relay IP userspace belum diuji. Paket yang lolos validasi belum diserahkan ke interface OS.
