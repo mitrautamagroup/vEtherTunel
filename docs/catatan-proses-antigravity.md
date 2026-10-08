@@ -70,4 +70,4 @@ Jika Git tidak meminta login lagi, hentikan percobaan berulang. Periksa helper k
 ## Batasan verifikasi
 
 - Uji yang dilakukan sebelumnya adalah pembuatan model Ollama dan satu prompt ringkas; belum ada benchmark kualitas atau evaluasi kode.
-- Uji manual loopback dengan dua proses node berhasil untuk enrollment QUIC, pengiriman teks, dan satu envelope IPv4 header-only. Detail runtime dan batas uji ada di `docs/prototipe-quic.md`. Belum diuji ping, routing OS, IPv6, NAT, atau koneksi lintas-host.
+- Uji manual loopback dengan dua proses node berhasil untuk enrollment QUIC, pengiriman teks, penolakan checksum IPv4 yang salah, dan relay satu envelope IPv4 header-only. Detail runtime dan batas uji ada di `docs/prototipe-quic.md`. Belum diuji ping, routing OS, IPv6, NAT, atau koneksi lintas-host.

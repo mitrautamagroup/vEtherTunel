@@ -33,6 +33,14 @@ def validate_ip_packet(payload: bytes, payload_type: int) -> tuple[IPAddress, IP
             raise ProtocolError("invalid IPv4 header length")
         if total_length != len(payload) or total_length < header_length:
             raise ProtocolError("invalid IPv4 total length")
+        checksum_sum = sum(
+            int.from_bytes(payload[offset : offset + 2], "big")
+            for offset in range(0, header_length, 2)
+        )
+        while checksum_sum >> 16:
+            checksum_sum = (checksum_sum & 0xFFFF) + (checksum_sum >> 16)
+        if checksum_sum != 0xFFFF:
+            raise ProtocolError("invalid IPv4 header checksum")
         return ipaddress.ip_address(payload[12:16]), ipaddress.ip_address(payload[16:20])
     if payload_type == PAYLOAD_IPV6:
         if len(payload) < 40 or payload[0] >> 4 != 6:

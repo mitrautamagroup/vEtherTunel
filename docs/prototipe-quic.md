@@ -9,7 +9,7 @@ Prototipe ini adalah langkah implementasi pertama untuk menguji identitas node, 
 - vEther ID dan identitas source/destination pada envelope berversi.
 - ACL peer default-deny yang dibaca dari konfigurasi hub.
 - Pesan teks antar node melalui QUIC DATAGRAM.
-- Framing IPv4/IPv6 dengan pemeriksaan panjang header, versi, dan kecocokan alamat sumber/destinasi terhadap node yang terdaftar. Hub dapat merelay envelope IP valid yang dikirim oleh pemanggil protokol.
+- Framing IPv4/IPv6 dengan pemeriksaan versi dan panjang; checksum header IPv4 serta kecocokan alamat sumber/destinasi terhadap node terdaftar juga diverifikasi. Hub dapat merelay envelope IP valid yang dikirim oleh pemanggil protokol.
 - Validasi sertifikat TLS pada node; sertifikat CA harus diberikan secara eksplisit.
 - Batas datagram prototipe 1100 byte.
 
@@ -68,6 +68,7 @@ Lingkungan: Python 3.12.14, `aioquic` 1.3.0, hub di `127.0.0.1:4433`, dua proses
 - Kedua node menyelesaikan enrollment QUIC/TLS dan ALPN `vethertunel/1`.
 - Pesan `hello-from-a` dikirim dari node A dan diterima node B.
 - Paket IPv4 20 byte dari `198.18.0.1` ke `198.18.0.2` lolos pemeriksaan alamat di hub dan diterima node B.
+- Paket dengan checksum header IPv4 salah ditolak oleh encoder node sebelum dikirim.
 - Node B hanya mencetak metadata paket. Paket uji memakai protocol number 253; tidak ada ping, socket IP, atau routing OS yang diuji.
 - Uji ini tidak mencakup penolakan ACL, paket rusak, IPv6, NAT, jaringan lintas-host, throughput, atau TUN/NetworkExtension.
 - Hub, klien, serta proses uji dihentikan setelah selesai. Uji berjalan hanya lewat loopback dan tidak mengubah interface atau rute.
