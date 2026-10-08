@@ -18,21 +18,34 @@ MVP menghubungkan dua atau lebih node dalam satu vEther dan menguji komunikasi I
 
 ### Komponen
 
-1. **Agen node** membuat/mengelola interface tunnel, menerapkan alamat overlay dan rute, serta melaporkan status.
-2. **Hub** memvalidasi peer, mengirim konfigurasi peer yang diizinkan, dan meneruskan trafik pada topologi awal.
+1. **Agen node** menghubungkan interface vEther lokal ke overlay, menerapkan alamat/rute yang diizinkan, dan melaporkan status.
+2. **Hub** menjalankan control plane vEtherTunel, memvalidasi peer, mengirim konfigurasi peer yang diizinkan, dan meneruskan trafik pada topologi awal.
 3. **Control plane** menyimpan identitas node, keanggotaan vEther, alamat, endpoint, dan kebijakan akses. Control plane tidak perlu berada pada jalur trafik setelah konfigurasi diterbitkan.
 4. **Relay (opsional tahap berikutnya)** menjadi fallback saat NAT/firewall mencegah koneksi langsung atau hub yang dapat dicapai.
 
-Implementasi dapat menggunakan WireGuard sebagai dasar tunnel karena menyediakan enkripsi dan autentikasi peer berbasis kunci. Ini masih pilihan rancangan, bukan keputusan yang mengunci protokol atau pustaka.
+## Protokol vEtherTunel
+
+vEtherTunel memiliki protokol aplikasi sendiri di atas QUIC. Protokol ini mendefinisikan enrollment, identitas node, keanggotaan vEther, kebijakan rute/peer, jenis payload, dan bagaimana gateway mengirim paket ke node tujuan. QUIC menyediakan transport UDP dengan sesi terenkripsi dan terautentikasi menggunakan TLS 1.3; vEtherTunel tidak memakai WireGuard dan tidak merancang cipher, key exchange, atau algoritma kriptografi sendiri. QUIC/TLS dipilih sebagai fondasi transport yang ditinjau dan distandardkan; spesifikasi primer: [RFC 9000](https://www.rfc-editor.org/rfc/rfc9000.html) dan [RFC 9001](https://www.rfc-editor.org/rfc/rfc9001.html).
+
+### Jalur data dan kontrol
+
+- **Control plane** memakai QUIC streams yang andal untuk enrollment, perubahan keanggotaan, pertukaran konfigurasi, keepalive/status, dan pembaruan kebijakan.
+- **Data plane MVP** memakai QUIC DATAGRAM (RFC 9221) untuk paket IP overlay agar batas paket dipertahankan dan paket tidak menunggu retransmisi paket lain. Datagram dapat hilang saat jaringan padat atau receiver kewalahan; QUIC memberi congestion control tetapi aplikasi tetap harus menangani kehilangan paket sesuai sifat IP. Validasi ukuran harus mengikuti batas QUIC dan path MTU untuk menghindari fragmentasi.
+- Agen membuat interface virtual Layer 3 (TUN atau padanan platform), lalu memasang rute overlay terbatas. Interface vEther yang ada di perangkat, misalnya veth0 pada appliance, bertindak sebagai LAN/segmen lokal di belakang gateway. Gateway merutekan trafik yang diizinkan antara segmen itu dan node vEther remote.
+- Envelope data vEtherTunel versi awal membawa `version`, `vEther_id`, `source_node_id`, `destination_node_id`, `payload_type`, dan payload IPv4/IPv6. Batas ukuran, validasi panjang, dan versi harus eksplisit. Header aplikasi tidak membawa key atau cipher buatan sendiri.
+- Untuk MVP hub-and-spoke, hub menjadi titik routing tepercaya: paket terlindungi saat melewati jaringan luar, tetapi hub dapat melihat paket setelah terminasi sesi QUIC. Ini harus dinyatakan dalam threat model. Enkripsi end-to-end antarnode dapat menjadi desain tahap lanjut bila dibutuhkan.
+- Setiap node memiliki identitas kriptografis yang diverifikasi saat enrollment. Hub menerapkan default-deny, memeriksa keanggotaan dan izin tujuan sebelum meneruskan paket, serta mendukung pencabutan identitas. Sertifikat/kunci privat tidak dikirim lewat chat atau disimpan dalam repo.
+
+vEtherTunel mendefinisikan aturan dan framing protokolnya sendiri, tetapi memakai QUIC/TLS untuk fungsi transport aman. QUIC DATAGRAM merupakan ekstensi standar, bukan fitur otomatis di setiap implementasi; dukungan peer harus dinegosiasikan. Rancangan ini menghindari pembuatan kriptografi baru yang belum ditinjau. Referensi primer untuk datagram: [RFC 9221](https://www.rfc-editor.org/rfc/rfc9221.html).
 
 ## Alur paket
 
 ```text
 aplikasi pada Node A
   -> rute ke alamat overlay Node B
-  -> interface vEther / tunnel terenkripsi
+  -> interface TUN vEtherTunel / paket QUIC DATAGRAM
   -> Hub (MVP hub-and-spoke)
-  -> tunnel ke Node B
+  -> sesi QUIC ke Node B
   -> interface vEther Node B
   -> aplikasi tujuan
 ```
@@ -40,19 +53,19 @@ aplikasi pada Node A
 1. Admin membuat vEther dan menetapkan rentang alamat overlay yang tidak bertabrakan dengan LAN yang perlu dijangkau.
 2. Node mendaftar dengan identitas dan kunci publik; kredensial pendaftaran memiliki masa berlaku dan cakupan terbatas.
 3. Control plane memverifikasi node, lalu menerbitkan konfigurasi minimum: alamat, endpoint hub, peer yang diizinkan, serta rute.
-4. Agen membangun tunnel terenkripsi ke hub dan memasang hanya rute overlay yang diperlukan.
-5. Paket menuju alamat overlay peer dikirim melalui tunnel. Hub meneruskan paket ke peer yang berhak menerimanya.
-6. Agen memantau handshake/keepalive dan mencoba membangun ulang tunnel saat koneksi pulih.
+4. Agen membuat sesi QUIC terautentikasi ke hub dan memasang hanya rute overlay yang diperlukan.
+5. Paket IP dibungkus sebagai envelope vEtherTunel dan dikirim memakai QUIC DATAGRAM. Hub memvalidasi keanggotaan/ACL, lalu meneruskan paket kepada peer yang diizinkan.
+6. Agen memantau status sesi QUIC dan mencoba membangun ulang koneksi dengan backoff saat jaringan pulih.
 
 ## Topologi dan evolusi
 
 ### Tahap 1: hub-and-spoke
 
-Semua node membuat tunnel keluar ke hub. Model ini mudah untuk menguji provisioning, alamat, ACL, dan alur paket; cocok ketika node berada di balik NAT. Kekurangannya adalah hub menjadi jalur data dan potensi bottleneck/single point of failure.
+Semua node membuka sesi QUIC keluar ke hub. Model ini mudah untuk menguji enrollment, alamat, ACL, dan alur paket; cocok ketika node berada di balik NAT. Kekurangannya adalah hub menjadi jalur data, titik kepercayaan, dan potensi bottleneck/single point of failure.
 
 ### Tahap 2: direct peer-to-peer dengan relay fallback
 
-Control plane membantu peer menemukan endpoint dan bertukar konfigurasi yang terautentikasi. Node mencoba tunnel langsung; bila gagal, trafik memakai relay. Perlu pengujian NAT yang ketat. Relay harus meneruskan hanya trafik peer yang sudah diotorisasi dan tidak memerlukan akses ke isi paket.
+Control plane membantu peer menemukan endpoint dan bertukar konfigurasi yang terautentikasi. Node mencoba sesi QUIC langsung; bila gagal, trafik memakai relay. Perlu pengujian NAT yang ketat. Relay harus meneruskan hanya trafik peer yang sudah diotorisasi. Jika relay hanya meneruskan sesi QUIC end-to-end, relay tidak mengakhiri sesi. Jika relay menjadi endpoint transport, kerahasiaan dari relay memerlukan desain enkripsi end-to-end antarnode terpisah sebelum fitur itu dirilis.
 
 ### Tahap 3: multi-hub / redundansi
 
@@ -84,7 +97,9 @@ Status per peer sebaiknya menampilkan identitas singkat, alamat overlay, endpoin
 ## Keputusan yang masih terbuka
 
 - Platform awal: Linux saja atau Linux/macOS/Windows.
-- Apakah hub mengakhiri tunnel per node atau bertindak sebagai control plane saja.
+- Untuk macOS, jalur MVP yang tersedia pada dokumentasi Apple adalah app extension NetworkExtension berbasis `NEPacketTunnelProvider`, yang menyediakan virtual interface Layer 3 dan alur paket IP untuk protokol tunnel kustom. Penggunaan provider ini memerlukan entitlement NetworkExtension. Jika kebutuhan kemudian benar-benar mengharuskan frame Ethernet Layer 2, Apple juga mendokumentasikan `NEEthernetTunnelProvider` dan `NEEthernetTunnelNetworkSettings`; kelayakan entitlement, provisioning, dan distribusi harus diuji sebelum menjadikannya target MVP. Referensi: [NEPacketTunnelProvider](https://developer.apple.com/documentation/networkextension/nepackettunnelprovider), [NEEthernetTunnelProvider](https://developer.apple.com/documentation/networkextension/neethernettunnelprovider).
+- Mac tidak langsung menyediakan interface produk bernama vEtherTunel; agen vEtherTunel perlu membuat dan mengelola virtual interface melalui NetworkExtension. Untuk uji awal, gunakan mode IP Layer 3.
+- Apakah hub merutekan sesi QUIC per node atau control plane hanya membantu pembentukan sesi langsung.
 - Format dan transport API control plane.
 - Distribusi kunci: provisioning manual untuk prototipe atau layanan enrollment.
 - Apakah ada kebutuhan nyata untuk bridging Layer 2, multicast, atau discovery broadcast.

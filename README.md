@@ -13,7 +13,7 @@ Dokumen ini menjadi rancangan awal, bukan klaim bahwa implementasi perangkat lun
 
 ## Rancangan awal
 
-MVP memakai **overlay Layer 3**: setiap node memperoleh alamat IP pada subnet virtual dan hanya rute overlay yang dikirim lewat tunnel. Ini memberi manfaat komunikasi antarnode tanpa meneruskan broadcast Ethernet ke seluruh peer. WireGuard menjadi kandidat transport tunnel; implementasi dan pilihan teknologi belum diputuskan.
+MVP memakai **overlay Layer 3** dengan protokol vEtherTunel sendiri untuk enrollment node, keanggotaan vEther, kebijakan, dan enkapsulasi paket. Agen menghubungkan interface vEther lokal ke overlay dan meneruskan hanya rute yang diizinkan. Protokol transport memakai QUIC dengan keamanan TLS 1.3; vEtherTunel tidak memakai WireGuard dan tidak membuat algoritma kriptografi sendiri. Bridging Ethernet Layer 2 menjadi opsi tahap lanjutan setelah isolasi broadcast dan keamanan diuji.
 
 Topologi awal menggunakan hub-and-spoke melalui satu gateway/tunnel hub. Setelah protokol kontrol dan autentikasi stabil, koneksi peer-to-peer langsung dapat ditambahkan dengan relay sebagai fallback. Rincian alur paket, identitas node, kontrol akses, dan batas MVP ada di [`docs/architecture.md`](docs/architecture.md). Tahapan kerja ada di [`docs/roadmap.md`](docs/roadmap.md).
 

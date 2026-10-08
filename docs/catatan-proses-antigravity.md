@@ -8,7 +8,8 @@ Dokumen ini mencatat pekerjaan yang dilakukan pada 9 Oktober 2026 untuk menyiapk
 
 - Repo dilengkapi konsep awal overlay jaringan Layer 3, arsitektur, prinsip keamanan, dan roadmap prototipe.
 - Dokumen menyatakan dengan jelas bahwa repo saat ini masih berisi rancangan, belum implementasi tunnel.
-- WireGuard dicatat sebagai kandidat teknologi, belum menjadi keputusan atau fitur yang sudah dibuat.
+- Pada draf awal, WireGuard sempat dicatat sebagai kandidat. Keputusan terbaru pemilik proyek pada 9 Oktober 2026 menggantinya: vEtherTunel akan memiliki protokol aplikasi sendiri di atas QUIC/TLS 1.3 dan tidak menggunakan WireGuard. Keputusan ini belum diimplementasikan.
+- Untuk eksperimen di Mac, dokumentasi Apple menyediakan `NEPacketTunnelProvider` untuk interface virtual Layer 3 dan `NEEthernetTunnelProvider` untuk tunnel frame link-layer kustom. Agen perlu dibuat sebagai Network Extension dan entitlement yang sesuai harus tersedia; Mac tidak otomatis memiliki interface bernama vEtherTunel. Lihat tautan resmi di dokumen arsitektur.
 
 ### Profil Qwen untuk proyek
 
@@ -19,7 +20,7 @@ Dokumen ini mencatat pekerjaan yang dilakukan pada 9 Oktober 2026 untuk menyiapk
   ollama create qwen2.5-coder-vether -f Modelfile.qwen-vether
   ```
 
-- Uji prompt ringkas berhasil: Qwen dapat menyebut MVP sebagai overlay Layer 3, topologi hub-and-spoke, dan membedakan kandidat WireGuard dari implementasi yang sudah ada.
+- Uji prompt ringkas berhasil: Qwen dapat menyebut MVP sebagai overlay Layer 3 dan topologi hub-and-spoke. Jawaban awalnya masih menyebut WireGuard karena mengikuti draf pada saat uji; keputusan baru di bawah menggantikan konteks itu.
 - Qwen juga diarahkan untuk memeriksa kode sebelum mengklaim fitur tersedia, menjaga keamanan peer/rute, dan tidak melakukan push paksa.
 - Ini **bukan fine-tuning**. Bobot model dasar tidak berubah; konteks proyek ditambahkan melalui system prompt.
 - Hasil uji menunjukkan model masih bisa menghasilkan istilah/terjemahan yang kurang tepat. Tinjau kode dan jawabannya sebelum dipakai.

@@ -2,6 +2,8 @@
 
 `Modelfile.qwen-vether` membuat varian Ollama bernama `qwen2.5-coder-vether`. Varian ini memakai bobot dasar `qwen2.5-coder:3b` dan menambahkan system prompt berisi konteks vEtherTunel, batas rancangan MVP, serta aturan kerja untuk partner programming.
 
+Keputusan rancangan saat ini: protokol aplikasi vEtherTunel sendiri di atas QUIC/TLS 1.3, tidak menggunakan WireGuard, dan tidak membuat algoritma kriptografi baru. Bangun ulang model lokal setelah mengubah Modelfile agar instruksi baru diterapkan.
+
 Ini **bukan fine-tuning** dan tidak mengubah bobot model. System prompt membantu Qwen tetap konsisten pada konteks dan instruksi proyek, tetapi jawaban tetap perlu diperiksa dan model dapat keliru.
 
 ## Membuat model
@@ -23,4 +25,3 @@ Di Twinny, pilih provider Ollama dan ganti nama model menjadi `qwen2.5-coder-vet
 ## Memperbarui konteks
 
 Perbarui bagian `Project facts` di Modelfile ketika keputusan rancangan berubah. Buat ulang model dengan perintah `ollama create` yang sama. Untuk detail yang sering berubah atau terlalu panjang untuk system prompt, lampirkan dokumen relevan (`README.md`, `docs/architecture.md`, atau `docs/roadmap.md`) sebagai context Twinny.
-
