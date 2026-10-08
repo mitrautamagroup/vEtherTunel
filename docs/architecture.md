@@ -1,6 +1,12 @@
 # Arsitektur Konseptual vEtherTunel
 
-Dokumen ini merekam rancangan awal vEther: beberapa jaringan/perangkat virtual saling berkomunikasi sebagai satu overlay melalui tunnel. Ini adalah bahan diskusi untuk prototipe; detail di bawah belum menandakan fitur sudah diimplementasikan.
+Dokumen ini merekam rancangan vEther: beberapa jaringan/perangkat virtual saling berkomunikasi sebagai satu overlay melalui tunnel. Bagian arsitektur di bawah adalah target desain; status implementasi yang benar-benar tersedia dicatat pada bagian **Status prototipe**.
+
+## Status prototipe
+
+Repo memiliki prototipe Python userspace QUIC di `vethertunel/` untuk enrollment node, envelope v1, ACL peer, dan pertukaran teks antar node melalui hub yang default-bind ke localhost. QUIC memakai TLS 1.3 dan verifikasi sertifikat CA pada client.
+
+Prototipe belum mengangkut paket IP, belum menghubungkan TUN atau NetworkExtension, belum memasang rute, belum diuji lintas host, dan bukan produk tunnel. Jenis payload IPv4/IPv6 hanya terdaftar di framing dan ditolak oleh hub. Panduan menjalankan demo lokal ada di `docs/prototipe-quic.md`.
 
 ## Istilah
 

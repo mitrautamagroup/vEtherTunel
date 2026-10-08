@@ -2,6 +2,12 @@
 
 Roadmap ini adalah usulan bertahap untuk membawa konsep vEtherTunel ke prototipe. Urutan dan target rilis belum ditetapkan.
 
+## Status implementasi saat ini
+
+- Prototipe Python userspace tersedia untuk QUIC/TLS 1.3 hub localhost, enrollment node, ACL peer, envelope v1, dan pesan teks melalui QUIC DATAGRAM.
+- Prototipe belum mengirim paket IP, belum membuat TUN/NetworkExtension, belum merutekan trafik, dan belum diuji lintas-host. Ikuti `docs/prototipe-quic.md`.
+- Antigravity mendapat panduan proyek di `AGENTS.md`; minta partner meninjau atau melanjutkan satu milestone kecil setiap sesi, lalu laporkan file, bukti, dan keterbatasan.
+
 ## 0. Sepakati kebutuhan
 
 - Tentukan perangkat dan sistem operasi yang akan menjadi node. Untuk macOS, validasi entitlement, jalur distribusi, dan prototype `NEPacketTunnelProvider` di VM/Mac uji sebelum menjanjikan dukungan; evaluasi provider Ethernet Layer 2 sebagai tahap terpisah.
@@ -12,6 +18,7 @@ Roadmap ini adalah usulan bertahap untuk membawa konsep vEtherTunel ke prototipe
 
 ## 1. Tunnel dua node
 
+- [x] Kerangka transport userspace QUIC localhost dengan enrollment, framing, ACL, dan demonstrasi pesan teks.
 - Rancang spesifikasi protokol aplikasi vEtherTunel: identitas, enrollment, envelope paket, versi, batas ukuran, dan perilaku error.
 - Bangun sesi QUIC/TLS 1.3 antara dua agen; jangan memakai WireGuard atau membuat algoritma kriptografi sendiri.
 - Hubungkan interface TUN vEtherTunel ke satu interface/segmen vEther lokal dan tetapkan rute overlay sempit.

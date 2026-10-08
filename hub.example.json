@@ -1,0 +1,16 @@
+{
+  "nodes": [
+    {
+      "vEther_id": "lab",
+      "node_id": "node-a",
+      "token": "replace-with-a-random-secret-at-least-16-chars",
+      "allowed_peers": ["node-b"]
+    },
+    {
+      "vEther_id": "lab",
+      "node_id": "node-b",
+      "token": "replace-with-another-random-secret-at-least-16",
+      "allowed_peers": ["node-a"]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vethertunel"
+version = "0.1.0"
+description = "Userspace QUIC relay prototype for the vEtherTunel protocol"
+requires-python = ">=3.11"
+dependencies = ["aioquic>=1.2,<2"]
+
+[project.scripts]
+vethertunel-hub = "vethertunel.hub:main"
+vethertunel-node = "vethertunel.node:main"
+
+[tool.setuptools.packages.find]
+include = ["vethertunel*"]

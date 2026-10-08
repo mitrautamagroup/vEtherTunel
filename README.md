@@ -2,7 +2,9 @@
 
 **vEtherTunel** adalah konsep jaringan Ethernet virtual (vEther) yang memungkinkan beberapa perangkat atau jaringan virtual berkomunikasi melalui tunnel terenkripsi di atas internet atau jaringan lain.
 
-Dokumen ini menjadi rancangan awal, bukan klaim bahwa implementasi perangkat lunak sudah tersedia. Fokus MVP adalah konektivitas IP antarnode yang sederhana, aman, dan dapat diuji.
+Repo kini berisi prototipe userspace QUIC awal untuk mendaftarkan dua node dan bertukar pesan teks melalui hub localhost. Ini belum menjadi tunnel IP dan belum mengubah interface atau rute sistem. Fokus MVP tetap konektivitas IP antarnode yang sederhana, aman, dan dapat diuji.
+
+Untuk menjalankan demonstrasi lokal, lihat [`docs/prototipe-quic.md`](docs/prototipe-quic.md). Aturan kerja Antigravity dan partner coding ada di [`AGENTS.md`](AGENTS.md).
 
 ## Tujuan
 
@@ -21,8 +23,11 @@ Catatan proses menyiapkan model Qwen lokal, menghubungkannya ke Twinny/Antigravi
 
 ## Status
 
-- [x] Konsep dan batas rancangan awal didokumentasikan.
+- [x] Konsep, batas rancangan, dan instruksi engineering untuk Antigravity didokumentasikan.
+- [x] Prototipe awal QUIC localhost: enrollment, envelope v1, ACL peer, dan pesan teks DATAGRAM.
 - [ ] Prototipe tunnel dua node.
+- [ ] Adapter paket IP/TUN di Linux lab.
+- [ ] NetworkExtension macOS setelah entitlement dan jalur distribusi diverifikasi.
 - [ ] Hub yang mengelola peer dan rute.
 - [ ] Uji reconnect, isolasi peer, dan skenario NAT.
 - [ ] Evaluasi kebutuhan bridging Layer 2.

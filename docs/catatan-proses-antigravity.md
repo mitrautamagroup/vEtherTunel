@@ -7,10 +7,11 @@ Dokumen ini mencatat pekerjaan yang dilakukan pada 9 Oktober 2026 untuk menyiapk
 ### Rancangan vEtherTunel
 
 - Repo dilengkapi konsep awal overlay jaringan Layer 3, arsitektur, prinsip keamanan, dan roadmap prototipe.
-- Dokumen menyatakan dengan jelas bahwa repo saat ini masih berisi rancangan, belum implementasi tunnel.
-- Pada draf awal, WireGuard sempat dicatat sebagai kandidat. Keputusan terbaru pemilik proyek pada 9 Oktober 2026 menggantinya: vEtherTunel akan memiliki protokol aplikasi sendiri di atas QUIC/TLS 1.3 dan tidak menggunakan WireGuard. Keputusan ini belum diimplementasikan.
+- Repo memuat prototipe awal QUIC localhost untuk enrollment node dan pesan teks antar peer. Ini belum implementasi tunnel IP.
+- Pada draf awal, WireGuard sempat dicatat sebagai kandidat. Keputusan pemilik proyek pada 9 Oktober 2026 menetapkan protokol aplikasi vEtherTunel di atas QUIC/TLS 1.3 tanpa WireGuard. Prototipe awal kini menerapkan enrollment/control stream, envelope v1, ACL peer, dan pesan teks DATAGRAM di localhost.
 - Untuk eksperimen di Mac, dokumentasi Apple menyediakan `NEPacketTunnelProvider` untuk interface virtual Layer 3 dan `NEEthernetTunnelProvider` untuk tunnel frame link-layer kustom. Agen perlu dibuat sebagai Network Extension dan entitlement yang sesuai harus tersedia; Mac tidak otomatis memiliki interface bernama vEtherTunel. Lihat tautan resmi di dokumen arsitektur.
 - Persyaratan keselamatan Mac ditambahkan: tidak memakai KEXT, tidak mengubah SIP/boot/system volume/startup, tidak memakai default route/DNS pada MVP, tunnel harus opt-in, dan harus ada stop/rollback. Dukungan macOS belum dipastikan sebelum entitlement/distribusi dan uji VM/Mac terpisah tersedia.
+- Ditambahkan `AGENTS.md` di root repo sebagai panduan workspace Antigravity: peran partner implementasi, batas macOS, arsitektur tanpa WireGuard, kebijakan bukti/verifikasi, dan aturan menjaga rahasia. Aturan workspace Antigravity mengenali `AGENTS.md` dan `GEMINI.md`.
 - Ollama dapat menjalankan Qwen lokal untuk dipilih Twinny sebagai provider model. Ini bukan kanal komunikasi langsung antara Twinny/Antigravity dan chat Codex. Pada pemeriksaan terakhir, selector Twinny masih menampilkan `qwen2.5-coder:3b`, jadi model khusus harus dipilih secara eksplisit sebelum dipakai di Twinny.
 
 ### Profil Qwen untuk proyek
@@ -27,16 +28,18 @@ Dokumen ini mencatat pekerjaan yang dilakukan pada 9 Oktober 2026 untuk menyiapk
 - Ini **bukan fine-tuning**. Bobot model dasar tidak berubah; konteks proyek ditambahkan melalui system prompt.
 - Hasil uji menunjukkan model masih bisa menghasilkan istilah/terjemahan yang kurang tepat. Tinjau kode dan jawabannya sebelum dipakai.
 
-### Akun Antigravity dan Git
+### Akun Antigravity dan Git (riwayat sebelum autentikasi diperbaiki)
 
 - Menu profil Antigravity menampilkan akun `mitrautamagroup (GitHub)`.
 - Ini membuktikan akun tersebut masuk ke profil Antigravity, tetapi tidak membuktikan kredensial Git HTTPS memakai akun yang sama.
 - Push dari terminal repo yang benar ditolak GitHub dengan pesan bahwa akses ke `mitrautamagroup/vEtherTunel.git` ditolak untuk akun `citramediatech` (HTTP 403).
 - Status Antigravity menunjukkan dua commit lokal menunggu push.
 
-## Status yang belum berhasil
+## Status GitHub dan implementasi
 
-Push ke GitHub belum berhasil. Penyebab yang teramati adalah Git memakai kredensial `citramediatech`, walaupun profil Antigravity menunjukkan `mitrautamagroup`. Email akun saja tidak mengganti kredensial yang dipakai Git.
+Pada 9 Oktober 2026, branch `main` berhasil di-push ke `https://github.com/mitrautamagroup/vEtherTunel.git` sebagai akun `mitrautamagroup`; remote `main` terverifikasi di commit `626eebd`. Push dilakukan memakai GitHub CLI credential helper khusus perintah, karena helper Git global masih memakai kredensial lama `citramediatech`.
+
+Perubahan prototipe userspace yang sekarang dikerjakan belum dipush sampai ditinjau dan disimpan dalam commit.
 
 Model `qwen2.5-coder-vether` sudah tersedia di Ollama dan berhasil diuji dari terminal. Namun, selector Twinny yang terlihat pada pemeriksaan masih menunjukkan `qwen2.5-coder:3b`; jangan menganggap Twinny sudah memakai model turunan sampai nama model itu terlihat dipilih di selector dan mendapat respons.
 
@@ -66,6 +69,5 @@ Jika Git tidak meminta login lagi, hentikan percobaan berulang. Periksa helper k
 
 ## Batasan verifikasi
 
-- Uji yang dilakukan adalah pembuatan model Ollama dan satu prompt ringkas; belum ada benchmark kualitas atau evaluasi kode.
-- Implementasi software vEtherTunel belum dibuat atau diuji pada tahap ini.
-- Push belum diverifikasi berhasil; dokumentasi ini dan commit terkait masih lokal sampai kredensial Git benar dan push sukses.
+- Uji yang dilakukan sebelumnya adalah pembuatan model Ollama dan satu prompt ringkas; belum ada benchmark kualitas atau evaluasi kode.
+- Prototipe QUIC saat ini belum diuji berjalan. Jangan menyatakan enrollment, relay, atau komunikasi node berhasil sampai uji dua proses lokal benar-benar dijalankan dan hasilnya dicatat.
