@@ -2,7 +2,7 @@
 
 **vEtherTunel** adalah konsep jaringan Ethernet virtual (vEther) yang memungkinkan beberapa perangkat atau jaringan virtual berkomunikasi melalui tunnel terenkripsi di atas internet atau jaringan lain.
 
-Repo kini berisi prototipe userspace QUIC awal untuk mendaftarkan dua node dan bertukar pesan teks melalui hub localhost. Ini belum menjadi tunnel IP dan belum mengubah interface atau rute sistem. Fokus MVP tetap konektivitas IP antarnode yang sederhana, aman, dan dapat diuji.
+Repo berisi prototipe relay QUIC/TLS dan adapter TUN opt-in khusus Linux untuk membawa paket IP antarnode. Adapter menambah alamat host dan rute /32 atau /128 hanya untuk peer yang dinyatakan; mode ini memerlukan Linux, `iproute2`, dan izin `CAP_NET_ADMIN`. Fitur belum diverifikasi pada Linux lab, sehingga ping/TCP belum dinyatakan berhasil. Di macOS mode TUN ditolak sebelum membuka koneksi dan tidak mengubah sistem.
 
 Untuk menjalankan demonstrasi lokal, lihat [`docs/prototipe-quic.md`](docs/prototipe-quic.md). Aturan kerja Antigravity dan partner coding ada di [`AGENTS.md`](AGENTS.md).
 
@@ -27,9 +27,9 @@ Catatan proses menyiapkan model Qwen lokal, menghubungkannya ke Twinny/Antigravi
 - [x] Prototipe awal QUIC localhost: enrollment, envelope v1, ACL peer, pesan teks dan paket IP manual melalui DATAGRAM.
 - [x] Relay manual pesan teks dan datagram IPv4/IPv6 tervalidasi pada loopback; paket hanya ditampilkan sebagai metadata dan tidak diserahkan ke stack IP OS.
 - [x] Bind hub ke IP privat RFC1918/ULA secara opt-in (`--allow-private-network`); default tetap loopback dan alamat wildcard/publik ditolak. Panduan antar-komputer ada di [`docs/prototipe-quic.md`](docs/prototipe-quic.md).
+- [x] Implementasi awal adapter Linux TUN opt-in: IP overlay lokal, rute host peer saja, filter sumber/tujuan, tanpa default route, DNS, atau IP forwarding. Belum diverifikasi pada Linux lab.
 - [ ] Verifikasi komunikasi node software lintas-komputer melalui LAN privat.
-- [ ] Prototipe tunnel dua node.
-- [ ] Adapter paket IP/TUN di Linux lab.
+- [ ] Verifikasi ping dan TCP antar-node lewat adapter TUN pada dua host Linux lab.
 - [ ] NetworkExtension macOS setelah entitlement dan jalur distribusi diverifikasi.
 - [ ] Hub yang mengelola peer dan rute.
 - [ ] Uji reconnect, isolasi peer, dan skenario NAT.
@@ -38,6 +38,8 @@ Catatan proses menyiapkan model Qwen lokal, menghubungkannya ke Twinny/Antigravi
 ## Prinsip keamanan
 
 Setiap peer harus terautentikasi dan hanya menerima rute/akses yang diizinkan. Kunci privat tidak boleh disimpan di repositori. Port forwarding atau akses jaringan tidak boleh dibuka lebih luas daripada kebutuhan. Di macOS, rancangan wajib memakai NetworkExtension yang dikelola sistem, tanpa kernel extension, perubahan boot/SIP, default route, atau perubahan DNS pada MVP. Tunnel mati secara default dan harus dapat dihentikan tanpa meninggalkan rute milik vEtherTunel. Lihat bagian keamanan di dokumen arsitektur sebelum membuat prototipe.
+
+Mode Linux TUN juga mati secara default dan hanya aktif dengan `--enable-tun`; lihat prasyarat dan batasnya di [`docs/prototipe-quic.md`](docs/prototipe-quic.md).
 
 ## Kontribusi
 

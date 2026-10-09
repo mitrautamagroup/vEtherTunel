@@ -1,6 +1,6 @@
 # Prototipe QUIC userspace
 
-Prototipe ini adalah langkah implementasi pertama untuk menguji identitas node, keanggotaan vEther, ACL peer, framing vEtherTunel, dan pengiriman data melalui QUIC. Ini **belum** merupakan tunnel IP: paket IP harus diberikan manual sebagai hex, tidak diambil dari stack OS, dan tidak diserahkan ke interface OS. Prototipe tidak mengubah interface, rute, DNS, firewall, atau pengaturan boot macOS.
+Prototipe ini menguji identitas node, keanggotaan vEther, ACL peer, framing vEtherTunel, dan QUIC DATAGRAM. Mode biasa hanya relay userspace. Ada adapter Linux TUN yang opt-in untuk mengambil paket dari stack IP dan memasukkan paket peer yang lolos validasi; adapter ini belum diverifikasi pada Linux lab. Tanpa `--enable-tun`, program tidak membuat interface atau rute. Di macOS, TUN ditolak dan tidak mengubah interface, rute, DNS, firewall, atau pengaturan boot.
 
 ## Yang tersedia
 
@@ -11,7 +11,7 @@ Prototipe ini adalah langkah implementasi pertama untuk menguji identitas node, 
 - Pesan teks antar node melalui QUIC DATAGRAM.
 - Framing IPv4/IPv6 dengan pemeriksaan versi dan panjang; checksum header IPv4 serta kecocokan alamat sumber/destinasi terhadap node terdaftar juga diverifikasi. Hub dapat merelay envelope IP valid yang dikirim oleh pemanggil protokol.
 - Validasi sertifikat TLS pada node; sertifikat CA harus diberikan secara eksplisit.
-- Batas datagram prototipe 1100 byte.
+- Maksimum envelope datagram 1400 byte; ukuran payload efektif juga bergantung pada panjang ID vEther/node.
 - Hub tetap bind ke loopback secara default. Bind ke alamat IPv4 RFC1918 atau IPv6 ULA hanya tersedia dengan flag `--allow-private-network`; alamat wildcard dan publik ditolak.
 
 ## Persiapan lokal
@@ -55,11 +55,23 @@ Saat diminta, ketik token node A pada prompt tersembunyi. Terminal 3 jalankan no
 ## Batas dan tindak lanjut
 
 - CLI menerima pesan teks atau paket IPv4/IPv6 manual dalam bentuk hex; hub memeriksa alamat sumber/destinasi terhadap pendaftaran node dan ACL sebelum merelaynya.
-- Tidak ada adapter TUN/NetworkExtension atau cara mengambil paket dari stack OS. Peer hanya menampilkan metadata paket yang diterima; paket tidak diserahkan ke interface OS.
-- Prototipe belum membuktikan konektivitas antarjaringan, NAT traversal, ping, TCP overlay, atau interoperabilitas dengan interface vEther appliance.
+- Tanpa `--enable-tun`, tidak ada cara mengambil paket dari stack OS; peer hanya menampilkan metadata paket yang diterima.
+- Adapter TUN Linux telah ditambahkan, tetapi belum dijalankan atau diverifikasi pada Linux lab. Karena itu ping, TCP overlay, cleanup saat proses mati, konektivitas lintas-host, NAT traversal, dan interoperabilitas appliance belum terbukti.
+- TUN memerlukan Linux, `/dev/net/tun`, `iproute2`, dan izin `CAP_NET_ADMIN`. Berikan satu atau lebih `--overlay-address IP` dan daftar `--peer-address NODE=IP`. Contoh node A:
+
+  ```sh
+  .venv/bin/vethertunel-node \
+    --host 192.168.1.10 --server-name 192.168.1.10 --ca-cert certs/hub.crt \
+    --vether-id lab --node-id node-a --enable-tun --tun-name vtun0 \
+    --overlay-address 10.77.0.1 --peer-address node-b=10.77.0.2
+  ```
+
+  Node B perlu menjalankan Linux juga, memakai `--overlay-address 10.77.0.2 --peer-address node-a=10.77.0.1`, serta token yang terdaftar. Hub `hub.json` harus memberi alamat yang sama kepada node masing-masing dan mengizinkan peer secara dua arah.
+- Adapter membuat interface non-persisten yang terikat ke file descriptor proses. Saat dihentikan atau proses keluar, penutupan descriptor meminta kernel membuang interface dan rute terkait. Konfigurasi hanya menetapkan alamat host dan rute /32 atau /128 peer. Tidak ada default route, DNS, firewall, atau `net.ipv4.ip_forward` yang diaktifkan. Pastikan tidak ada alamat overlay bentrok dengan jaringan host.
+- Kirim ping antar-alamat overlay setelah kedua node terhubung. Untuk TCP, jalankan server/client aplikasi di alamat overlay. Hasil harus dicatat setelah benar-benar diamati pada lab; contoh konfigurasi ini bukan bukti hasil koneksi.
 - Jangan bind hub ke alamat publik atau meneruskan port router sebagai bagian dari uji awal.
 - Token contoh harus diganti; konfigurasi hub berisi bearer token untuk lab dan wajib dijaga lokal.
-- Tahap berikutnya: verifikasi koneksi antar-komputer melalui LAN privat, lalu tambah verifikasi protokol/ACL dan perbaiki konfigurasi enrollment. Adapter paket OS tetap menunggu implementasi Linux lab; integrasi macOS menunggu desain NetworkExtension, entitlement, review, dan uji VM/Mac terpisah.
+- Tahap berikutnya: validasi koneksi QUIC lintas-komputer, lalu uji TUN/ping/TCP dan cleanup di dua host Linux disposable. Integrasi macOS menunggu desain NetworkExtension, entitlement, review, dan uji VM/Mac terpisah.
 - Demo loopback teks dan satu paket IPv4 header-only sudah berhasil pada 9 Oktober 2026. Ini hanya menguji relay envelope aplikasi; paket tidak diserahkan ke interface OS.
 
 ## Demonstrasi antar-node di LAN privat (opt-in)

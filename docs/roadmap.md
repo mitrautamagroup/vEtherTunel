@@ -4,8 +4,8 @@ Roadmap ini adalah usulan bertahap untuk membawa konsep vEtherTunel ke prototipe
 
 ## Status implementasi saat ini
 
-- Prototipe Python userspace menyediakan hub QUIC/TLS 1.3 localhost, enrollment node, ACL peer, envelope v1, relay pesan teks, serta relay paket IPv4/IPv6 manual yang tervalidasi.
-- Demo loopback manual untuk teks dan paket IPv4/IPv6 header-only berhasil; uji IPv6 40 byte dari `fd12:3456:789a::1` ke `fd12:3456:789a::2`. Prototipe ini hanya relay QUIC/TLS userspace dengan hub localhost, bukan tunnel OS. Belum ada TUN/NetworkExtension, ping/routing OS, uji NAT atau koneksi lintas-host, maupun uji otomatis. Rincian ada di `docs/prototipe-quic.md`.
+- Prototipe Python userspace menyediakan hub QUIC/TLS 1.3, enrollment node, ACL peer, envelope v1, relay pesan teks/IP manual, serta implementasi awal TUN Linux yang opt-in.
+- Demo loopback manual teks dan paket IPv4/IPv6 sebelumnya berhasil. Adapter TUN belum dijalankan pada Linux lab; ping/TCP, cleanup, NAT, dan koneksi lintas-host belum terverifikasi. Pada macOS, TUN tidak aktif dan tidak mengubah konfigurasi. Rincian ada di `docs/prototipe-quic.md`.
 - Antigravity mendapat panduan proyek di `AGENTS.md`; minta partner meninjau atau melanjutkan satu milestone kecil setiap sesi, lalu laporkan file, bukti, dan keterbatasan.
 
 ## 0. Sepakati kebutuhan
@@ -21,8 +21,8 @@ Roadmap ini adalah usulan bertahap untuk membawa konsep vEtherTunel ke prototipe
 - [x] Kerangka transport userspace QUIC localhost dengan enrollment, framing, ACL, dan demonstrasi pesan teks.
 - Rancang spesifikasi protokol aplikasi vEtherTunel: identitas, enrollment, envelope paket, versi, batas ukuran, dan perilaku error.
 - Bangun sesi QUIC/TLS 1.3 antara dua agen; jangan memakai WireGuard atau membuat algoritma kriptografi sendiri.
-- Hubungkan interface TUN vEtherTunel ke satu interface/segmen vEther lokal dan tetapkan rute overlay sempit.
-- Verifikasi ping dan TCP, restart, serta pembersihan konfigurasi.
+- [x] Tambahkan adapter TUN Linux opt-in dengan alamat dan rute host peer saja.
+- Verifikasi ping dan TCP di dua host Linux lab, restart, serta pembersihan konfigurasi.
 - Dokumentasikan instalasi, keterbatasan, dan cara memeriksa status.
 - Pastikan uji macOS memakai overlay route yang sempit dan prosedur deactivate/rollback yang terdokumentasi.
 

@@ -12,7 +12,9 @@ VERSION = 1
 PAYLOAD_TEXT = 1
 PAYLOAD_IPV4 = 2
 PAYLOAD_IPV6 = 3
-MAX_DATAGRAM_SIZE = 1100
+MAX_DATAGRAM_SIZE = 1400
+MAX_DATAGRAM_FRAME_SIZE = MAX_DATAGRAM_SIZE + 2
+MAX_QUIC_DATAGRAM_SIZE = MAX_DATAGRAM_SIZE + 52
 _HEADER = struct.Struct("!4sBBBBBH")
 _MAX_ID_SIZE = 64
 IPAddress: TypeAlias = ipaddress.IPv4Address | ipaddress.IPv6Address
@@ -20,6 +22,20 @@ IPAddress: TypeAlias = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 class ProtocolError(ValueError):
     """Raised when an envelope is malformed or unsupported."""
+
+
+def max_envelope_payload_size(
+    vether_id: str, source_node_id: str, destination_node_id: str
+) -> int:
+    """Return the largest payload fitting this envelope's UTF-8 identifiers."""
+    encoded_ids = (
+        vether_id.encode("utf-8"),
+        source_node_id.encode("utf-8"),
+        destination_node_id.encode("utf-8"),
+    )
+    if any(not value or len(value) > _MAX_ID_SIZE for value in encoded_ids):
+        raise ProtocolError("identifiers must be 1..64 UTF-8 bytes")
+    return MAX_DATAGRAM_SIZE - _HEADER.size - sum(map(len, encoded_ids))
 
 
 def validate_ip_packet(payload: bytes, payload_type: int) -> tuple[IPAddress, IPAddress]:

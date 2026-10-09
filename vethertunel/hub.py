@@ -23,6 +23,8 @@ from aioquic.quic.events import (
 from .protocol import (
     Envelope,
     MAX_DATAGRAM_SIZE,
+    MAX_DATAGRAM_FRAME_SIZE,
+    MAX_QUIC_DATAGRAM_SIZE,
     PAYLOAD_IPV4,
     PAYLOAD_IPV6,
     ProtocolError,
@@ -233,8 +235,8 @@ async def run_hub(args: argparse.Namespace) -> None:
     configuration = QuicConfiguration(
         alpn_protocols=[ALPN],
         is_client=False,
-        max_datagram_frame_size=MAX_DATAGRAM_SIZE,
-        max_datagram_size=1200,
+        max_datagram_frame_size=MAX_DATAGRAM_FRAME_SIZE,
+        max_datagram_size=MAX_QUIC_DATAGRAM_SIZE,
     )
     configuration.load_cert_chain(args.certificate, args.private_key)
     await serve(
